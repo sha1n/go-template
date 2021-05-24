@@ -109,6 +109,10 @@ go-clean:
 	@echo "  >  Cleaning build cache"
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean -mod=readonly $(GOBASE)/cmd
 
+build-docker-image:
+	@echo "  >  Building docker image..."
+	docker build -t sha1n/$(PROJECTNAME):latest .
+	docker tag sha1n/$(PROJECTNAME):latest sha1n/$(PROJECTNAME):$(VERSION:v%=%)
 
 .PHONY: help
 all: help
