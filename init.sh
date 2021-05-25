@@ -39,6 +39,14 @@ cat <<EOT > README.md
 # $REPO
 EOT
 
+title "Processing go.mod..."
+cat <<EOT > go.mod
+module github.com/sha1n/$REPO
+
+go 1.16
+
+EOT
+
 title "Running build..."
 make
 
