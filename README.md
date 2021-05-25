@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/sha1n/go-template.svg?branch=master)](https://travis-ci.com/sha1n/go-template) 
+[![Go](https://github.com/sha1n/go-template/actions/workflows/go.yml/badge.svg)](https://github.com/sha1n/go-template/actions/workflows/go.yml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sha1n/go-template)
 [![Go Report Card](https://goreportcard.com/badge/sha1n/go-template)](https://goreportcard.com/report/sha1n/go-template) 
 [![Release](https://img.shields.io/github/release/sha1n/go-template.svg?style=flat-square)](https://github.com/sha1n/go-template/releases)
