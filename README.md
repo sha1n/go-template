@@ -8,10 +8,11 @@
 
 # go-template
 
+## Before anything else
 ```bash
-git clone git@github.com:sha1n/<repo>.git
+git clone git@github.com:<owner>/<repo>.git
 cd <repo>
-./init.sh <repo>
+./init.sh <owner> <repo>
 ```
 
 ## Features
