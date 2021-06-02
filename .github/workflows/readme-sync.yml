@@ -47,7 +47,14 @@ jobs:
           delete-branch: true
           title: "[docs] README.md Auto-Sync"
           body: |
-            README.md auto-synced.
+            README.md auto-synced for repository site.
           labels: |
             documentation
           assignees: sha1n
+      - name: Enable Pull Request Auto-merge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
