@@ -7,7 +7,6 @@ PROGRAMNAME := $(PROJECTNAME)
 
 # Go related variables.
 GOBASE := $(shell pwd)
-GOPATH := $(GOBASE)/vendor:$(GOBASE)
 GOBIN := $(GOBASE)/bin
 GOBUILD := $(GOBASE)/build
 GOFILES := $(shell find . -type f -name '*.go' -not -path './vendor/*')
@@ -18,7 +17,7 @@ GOARCH_AMD64 := "amd64"
 GOARCH_ARM64 := "arm64"
 GOARCH_ARM := "arm"
 
-MODFLAGS=-mod=readonly
+MODFLAGS= #-mod=readonly
 
 # Use linker flags to provide version/build settings
 LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -X=main.ProgramName=$(PROGRAMNAME)"
@@ -66,7 +65,7 @@ go-format:
 	@echo "  >  Formating source files..."
 	gofmt -s -w $(GOFILES)
 
-go-build: go-get go-build-linux-amd64 go-build-linux-arm64 go-build-darwin-amd64 go-build-windows-amd64 go-build-windows-arm
+go-build: go-get go-build-linux-amd64 go-build-linux-arm go-build-linux-arm64 go-build-darwin-amd64 go-build-darwin-arm64 go-build-windows-amd64 go-build-windows-arm
 
 go-test:
 	go test $(MODFLAGS) -covermode=count `go list $(MODFLAGS) ./...`
@@ -80,13 +79,21 @@ go-build-linux-amd64:
 	@echo "  >  Building linux amd64 binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_AMD64) $(GOBASE)/cmd
 
+go-build-linux-arm:
+	@echo "  >  Building linux arm binaries..."
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM) $(GOBASE)/cmd
+
 go-build-linux-arm64:
 	@echo "  >  Building linux arm64 binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM64) $(GOBASE)/cmd
 
 go-build-darwin-amd64:
-	@echo "  >  Building darwin binaries..."
+	@echo "  >  Building darwin amd64 binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_AMD64) $(GOBASE)/cmd
+
+go-build-darwin-arm64:
+	@echo "  >  Building darwin arm64 binaries..."
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_ARM64) $(GOBASE)/cmd
 
 go-build-windows-amd64:
 	@echo "  >  Building windows amd64 binaries..."
@@ -111,7 +118,6 @@ go-clean:
 	@echo "  >  Cleaning build cache"
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean $(MODFLAGS) $(GOBASE)
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean -modcache
-
 
 
 .PHONY: help
