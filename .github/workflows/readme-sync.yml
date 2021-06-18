@@ -1,20 +1,23 @@
 #
 # This workflow monitors changes in README.md and syncs them with the docs/README.md which serves the generated site.
 #
-name: Sync README
+name: Sync Site README
 
 on:
-  push:
+  pull_request:
     branches: [master]
     paths:
       - "README.md"
 
 jobs:
-  build:
+  sync_site_readme:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - run: |-
+          git fetch --all
+          git checkout ${{ github.event.pull_request.head.ref }}
       - name: Sync README
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,32 +32,11 @@ jobs:
           sed -i 's/href="docs\//href="/g' docs/README.md
           sed -i 's/href="\/docs\//href="\//g' docs/README.md
       - name: Commit and push if README changed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
           git diff
           git config --global user.email "housekeeping@example.com"
           git config --global user.name "housekeeping-bot"
           git diff --quiet || (git add docs/README.md && git commit -m "Synced README")
-      - name: Create Pull Request
-        id: PR
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "README.md auto-sync"
-          committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          signoff: false
-          branch: readme-auto-sync
-          delete-branch: true
-          title: "[docs] README.md Auto-Sync"
-          body: |
-            README.md auto-synced for repository site.
-          labels: |
-            documentation
-          assignees: sha1n
-      - name: Enable Pull Request Auto-merge
-        if: steps.cpr.outputs.pull-request-operation == 'created'
-        uses: peter-evans/enable-pull-request-automerge@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
+          git push -u origin ${{ github.event.pull_request.head.ref }}
