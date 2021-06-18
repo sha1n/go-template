@@ -28,6 +28,7 @@ process_template() {
 OWNER="$1"
 REPO="$2"
 
+process_template ".goreleaser.yml"
 process_template "Makefile"
 process_template "go.mod"
 process_template ".github/dependabot.yml"

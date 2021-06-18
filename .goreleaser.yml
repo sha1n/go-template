@@ -1,0 +1,59 @@
+before:
+  hooks:
+    - go mod download
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    ldflags:
+      - -s -w -X main.DisableUpdate=true -X main.Version={{.Version}} -X main.Build={{.Commit}} -X main.ProgramName={{.ProjectName}}
+    main: ./cmd/main.go
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+snapshot:
+  name_template: "{{ .Tag }}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+brews:
+  - name: "{{ .ProjectName }}"
+    goarm: 6
+
+    tap:
+      owner: sha1n
+      name: homebrew-tap
+
+    url_template: "https://github.com/sha1n/{{ .ProjectName }}/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    download_strategy: CurlDownloadStrategy
+    commit_author:
+      name: goreleaserbot
+      email: goreleaser@carlosbecker.com
+
+    folder: Formula
+
+    homepage: "https://sha1n.github.io/{{ .ProjectName }}/"
+    description: ""
+    license: "MIT"
+
+    test: |
+      system "#{bin}/{{ .ProjectName }} --version"
+
+    install: |
+      bin.install "{{ .ProjectName }}"

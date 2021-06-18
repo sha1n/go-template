@@ -65,6 +65,10 @@ go-format:
 	@echo "  >  Formating source files..."
 	gofmt -s -w $(GOFILES)
 
+go-build-current:
+	@echo "  >  Building $(GOHOSTOS)/$(GOHOSTARCH) binaries..."
+	@GOPATH=$(GOPATH) GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME) $(GOBASE)/cmd
+
 go-build: go-get go-build-linux-amd64 go-build-linux-arm go-build-linux-arm64 go-build-darwin-amd64 go-build-darwin-arm64 go-build-windows-amd64 go-build-windows-arm
 
 go-test:
@@ -119,6 +123,13 @@ go-clean:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean $(MODFLAGS) $(GOBASE)
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean -modcache
 
+release:
+ifdef GITHUB_TOKEN
+	@echo "  >  Releasing..."
+	goreleaser release --rm-dist
+else
+	$(error GITHUB_TOKEN is not set)
+endif
 
 .PHONY: help
 all: help
