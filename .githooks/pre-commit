@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+FILE_LIST=$(git diff --cached --name-status | egrep '\.go$' | awk '$1 != "D" { print $2 }')
+
+if [ -z "$FILE_LIST" ]
+then
+      echo "No Go files..."
+else
+      echo "Formatting..."
+      gofmt -s -w ${FILE_LIST}
+      echo "Vetting..."
+      go vet -c=10 ${FILE_LIST}
+
+      git add $FILE_LIST
+fi
