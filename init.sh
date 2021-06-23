@@ -24,6 +24,11 @@ process_template() {
   sed -i "" "s/sha1n/$OWNER/g" $1
   sed -i "" "s/go-template/$REPO/g" $1
 }
+deploy_git_hooks() {
+  title "Deploying git hooks..."
+  cp -R .githooks/. .git/hooks/
+}
+
 
 OWNER="$1"
 REPO="$2"
@@ -35,6 +40,7 @@ process_template ".github/dependabot.yml"
 process_template ".github/workflows/readme-sync.yml"
 process_template "README.md"
 
+deploy_git_hooks
 
 title "Running build..."
 make
