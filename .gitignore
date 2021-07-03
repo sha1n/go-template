@@ -17,6 +17,8 @@ vendor/
 # Make output directories
 bin/
 build/
+protoc/
+generated/
 
 # IDE
 .vscode/

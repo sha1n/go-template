@@ -17,8 +17,12 @@ cd <repo>
 
 ## Features
 
-- Init script for setup
+- Init script for initial repo setup
 - Makefile
+  - standard build/test/format/lint
+  - protobuf support with repo private `protoc` installtion (see `PROTOC_VERSION` in [Makefile](Makefile))
+  - multi-platform binaries
+  - goreleaser with `brew` support
 - Workflows
   - Go build + coverage - [go.yml](/.github/workflows/go.yml)
   - Go report card - [go-report-card.yml](/.github/workflows/go-report-card.yml)
