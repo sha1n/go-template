@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 
-FILE_LIST=$(git diff --cached --name-status | egrep '\.go$' | awk '$1 != "D" { print $2 }')
+# Copied from https://github.com/golang/go/blob/88da9ccb98ffaf84bb06b98c9a24af5d0a7025d2/misc/git/pre-commit
 
-if [ -z "$FILE_LIST" ]
-then
-      echo "No Go files..."
-else
-      echo "Formatting..."
-      gofmt -s -w ${FILE_LIST}
-      echo "Vetting..."
-      go vet -c=10 ${FILE_LIST}
+gofiles=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
+[ -z "$gofiles" ] && exit 0
 
-      git add $FILE_LIST
-fi
+unformatted=$(gofmt -l $gofiles)
+[ -z "$unformatted" ] && exit 0
+
+# Some files are not gofmt'd. Print message and fail.
+
+echo >&2 "Go files must be formatted with gofmt. Please run:"
+for fn in $unformatted; do
+	echo >&2 "  gofmt -w $PWD/$fn"
+done
+
+exit 1
