@@ -31,7 +31,7 @@ download_protoc() {
     exit 1
   fi 
 
-  tmp_dir=$(mktemp -d -t protoc-download)
+  tmp_dir=$(mktemp -d 2>/dev/null || mktemp -d -t 'protoc-download')
   file_name="protoc-${PROTOC_VERSION}-${osarch}.zip"
   file_path="${tmp_dir}/${file_name}"
 
