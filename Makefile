@@ -14,12 +14,19 @@ PROTOC_HOME := "$(BASEDIR)/protoc"
 PROTOC_SOURCES := "$(BASEDIR)/proto"
 PROTOC_VERSION := "3.17.3"
 
+BIN := "$(BASEDIR)/bin"
+BUILD := "$(BASEDIR)/build"
+GENERATED := "$(BASEDIR)/generated"
+
 # Go related
+ifndef $(GOPATH)
+    GOPATH=$(shell go env GOPATH)
+    export GOPATH
+endif
+
+GOBIN := "$(GOPATH)/bin"
 GOHOSTOS := $(shell go env GOHOSTOS)
 GOHOSTARCH := $(shell go env GOHOSTARCH)
-GOBIN := "$(BASEDIR)/bin"
-GOBUILD := "$(BASEDIR)/build"
-GOGENERATED := "$(BASEDIR)/generated"
 GOFILES := $(shell find . -type f -name '*.go' -not -path './vendor/*')
 GOOS_DARWIN := "darwin"
 GOOS_LINUX := "linux"
@@ -34,19 +41,19 @@ MODFLAGS= #-mod=readonly
 LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -X=main.ProgramName=$(PROGRAMNAME)"
 
 # Redirect error output to a file, so we can show it in development mode.
-STDERR := $(GOBUILD)/.$(PROJECTNAME)-stderr.txt
+STDERR := $(BUILD)/.$(PROJECTNAME)-stderr.txt
 
 # PID file will keep the process id of the server
-PID := $(GOBUILD)/.$(PROJECTNAME).pid
+PID := $(BUILD)/.$(PROJECTNAME).pid
 
 # Make is verbose in Linux. Make it silent.
 MAKEFLAGS += --silent
 
-default: format lint build test
+default: install format lint build test
 
-ci-checks: format lint test
+ci-checks: install format lint test
 
-install: go-get
+install: go-get go-install
 
 format: go-format
 
@@ -56,25 +63,25 @@ generate-sources: go-proto-gen
 
 .PHONY: build
 build:
-	@[ -d $(GOBUILD) ] || mkdir -p $(GOBUILD)
-	@-mkdir -p $(GOBUILD)/completions
+	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
+	@-mkdir -p $(BUILD)/completions
 	@-touch $(STDERR)
 	@-rm $(STDERR)
 	@-$(MAKE) -s go-build #2> $(STDERR)
 	# generate completions
-	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion zsh > $(GOBUILD)/completions/_$(PROGRAMNAME)
-	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion bash > $(GOBUILD)/completions/$(PROGRAMNAME).bash
-	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion fish > $(GOBUILD)/completions/$(PROGRAMNAME).fish
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion zsh > $(BUILD)/completions/_$(PROGRAMNAME)
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion bash > $(BUILD)/completions/$(PROGRAMNAME).bash
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion fish > $(BUILD)/completions/$(PROGRAMNAME).fish
 
 	#@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
 test: generate-sources go-test
 
 clean:
-	@-rm $(GOBIN)/$(PROGRAMNAME)* 2> /dev/null
-	@-rm -rf $(GOGENERATED)/* 2> /dev/null
-	@-rm -rf $(GOBIN)/* 2> /dev/null
-	@-rm -rf $(GOBUILD)/* 2> /dev/null
+	@-rm $(BIN)/$(PROGRAMNAME)* 2> /dev/null
+	@-rm -rf $(GENERATED)/* 2> /dev/null
+	@-rm -rf $(BIN)/* 2> /dev/null
+	@-rm -rf $(BUILD)/* 2> /dev/null
 	@-$(MAKE) go-clean
 
 go-lint:
@@ -87,7 +94,7 @@ go-format:
 
 go-build-current:
 	@echo "  >  Building $(GOHOSTOS)/$(GOHOSTARCH) binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME) $(BASEDIR)/cmd
 
 go-build: go-get generate-sources go-build-linux-amd64 go-build-linux-arm go-build-linux-arm64 go-build-darwin-amd64 go-build-darwin-arm64 go-build-windows-amd64 go-build-windows-arm
 
@@ -96,44 +103,48 @@ go-test:
 
 go-build-linux-amd64:
 	@echo "  >  Building linux amd64 binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_AMD64) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_AMD64) $(BASEDIR)/cmd
 
 go-build-linux-arm:
 	@echo "  >  Building linux arm binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM) $(BASEDIR)/cmd
 
 go-build-linux-arm64:
 	@echo "  >  Building linux arm64 binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM64) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_LINUX) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_LINUX)-$(GOARCH_ARM64) $(BASEDIR)/cmd
 
 go-build-darwin-amd64:
 	@echo "  >  Building darwin amd64 binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_AMD64) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_AMD64) $(BASEDIR)/cmd
 
 go-build-darwin-arm64:
 	@echo "  >  Building darwin arm64 binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_ARM64) $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_DARWIN) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_DARWIN)-$(GOARCH_ARM64) $(BASEDIR)/cmd
 
 go-build-windows-amd64:
 	@echo "  >  Building windows amd64 binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_AMD64).exe $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_AMD64).exe $(BASEDIR)/cmd
 
 go-build-windows-arm:
 	@echo "  >  Building windows arm binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(GOBIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_ARM).exe $(BASEDIR)/cmd
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_ARM).exe $(BASEDIR)/cmd
 
 go-proto-gen:
 	@echo "  >  Generating protobuf sources..."
 	@[ -d $(PROTOC_HOME) ] || "$(SCRIPTS_HOME)/setup_protoc.sh" "$(PROTOC_VERSION)" "$(PROTOC_HOME)"
-	@[ -d $(GOGENERATED) ] || mkdir -p $(GOGENERATED)
-	PATH=$$PATH:$(GOPATH)/bin $(PROTOC_HOME)/bin/protoc --go_out=$(GOGENERATED) -I=$(PROTOC_HOME)/include -I=$(PROTOC_SOURCES) $(PROTOC_SOURCES)/*.proto
+	@[ -d $(GENERATED) ] || mkdir -p $(GENERATED)
+	PATH=$$PATH:$(GOBIN) $(PROTOC_HOME)/bin/protoc --go_out=$(GENERATED) -I=$(PROTOC_HOME)/include -I=$(PROTOC_SOURCES) $(PROTOC_SOURCES)/*.proto
 
 go-get:
-	@echo "  >  Checking if there is any missing dependencies..."
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go mod tidy
+	@echo "  >  Downloading build dependencies..."
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go get google.golang.org/protobuf/cmd/protoc-gen-go
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	# @GOPATH=$(GOPATH) GOBIN=$(GOBIN) go mod tidy
 
 go-install:
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install $(GOFILES)
+	@echo "  >  Installing build dependencies..."
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 go-clean:
 	@echo "  >  Cleaning build cache"
