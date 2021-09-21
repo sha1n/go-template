@@ -15,12 +15,8 @@ PROTOC_SOURCES := "$(BASEDIR)/proto"
 PROTOC_VERSION := "3.17.3"
 
 # Go related
-
-ifndef $(GOPATH)
-    GOPATH=$(shell go env GOPATH)
-    export GOPATH
-endif
-
+GOHOSTOS := $(shell go env GOHOSTOS)
+GOHOSTARCH := $(shell go env GOHOSTARCH)
 GOBIN := "$(BASEDIR)/bin"
 GOBUILD := "$(BASEDIR)/build"
 GOGENERATED := "$(BASEDIR)/generated"
@@ -46,7 +42,7 @@ PID := $(GOBUILD)/.$(PROJECTNAME).pid
 # Make is verbose in Linux. Make it silent.
 MAKEFLAGS += --silent
 
-default: format lint test compile
+default: format lint build test
 
 ci-checks: format lint test
 
@@ -58,13 +54,19 @@ lint: generate-sources go-lint
 
 generate-sources: go-proto-gen
 
-compile:
+.PHONY: build
+build:
 	@[ -d $(GOBUILD) ] || mkdir -p $(GOBUILD)
+	@-mkdir -p $(GOBUILD)/completions
 	@-touch $(STDERR)
 	@-rm $(STDERR)
 	@-$(MAKE) -s go-build #2> $(STDERR)
-	#@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
+	# generate completions
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion zsh > $(GOBUILD)/completions/_$(PROGRAMNAME)
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion bash > $(GOBUILD)/completions/$(PROGRAMNAME).bash
+	bin/$(PROGRAMNAME)-$(GOHOSTOS)-$(GOHOSTARCH) completion fish > $(GOBUILD)/completions/$(PROGRAMNAME).fish
 
+	#@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
 test: generate-sources go-test
 
@@ -138,13 +140,15 @@ go-clean:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean $(MODFLAGS) $(BASEDIR)
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean -modcache
 
-release:
+goreleaser-release:
 ifdef GITHUB_TOKEN
 	@echo "  >  Releasing..."
 	goreleaser release --rm-dist
 else
 	$(error GITHUB_TOKEN is not set)
 endif
+
+release: build goreleaser-release
 
 .PHONY: help
 all: help
