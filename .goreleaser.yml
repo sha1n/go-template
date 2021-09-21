@@ -13,14 +13,24 @@ builds:
       - arm
       - arm64
     ldflags:
-      - -s -w -X main.DisableUpdate=true -X main.Version={{.Version}} -X main.Build={{.Commit}} -X main.ProgramName={{.ProjectName}}
+      - -s -w -X main.DisableSelfUpdate=true -X main.Version={{.Version}} -X main.Build={{.Commit}} -X main.ProgramName={{.ProjectName}}
     main: ./cmd/main.go
 archives:
-  - replacements:
+  -
+    id: main
+    replacements:
       darwin: Darwin
       linux: Linux
       386: i386
       amd64: x86_64
+    files:
+      - README.md
+      - LICENSE
+      - build/completions
+      - src: 'build/completions/*'
+        dst: completions
+        strip_parent: true
+
 checksum:
   name_template: "checksums.txt"
   algorithm: sha256
@@ -57,3 +67,6 @@ brews:
 
     install: |
       bin.install "{{ .ProjectName }}"
+      bash_completion.install "completions/{{ .ProjectName }}.bash" => "{{ .ProjectName }}"
+      fish_completion.install "completions/{{ .ProjectName }}.fish" => "{{ .ProjectName }}"
+      zsh_completion.install "completions/_{{ .ProjectName }}" => "_{{ .ProjectName }}"
