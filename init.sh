@@ -30,9 +30,9 @@ deploy_git_hooks() {
 
 replace_values() {
   title "Processing $1..."
-  sed -i "" "s/sha1n/$OWNER/g" $1
-  sed -i "" "s/go-template/$REPO/g" $1
-  sed -i "" "s/1.17/$GOVERSION/g" $1
+  sed -i "" "s/sha1n/$OWNER/g" "$1"
+  sed -i "" "s/go-template/$REPO/g" "$1"
+  sed -i "" "s/1.17/$GOVERSION/g" "$1"
 }
 
 replace_values_recursively() {
@@ -45,16 +45,17 @@ replace_values_recursively() {
 ####################################################
 
 function apply_values() {
-  manual_files=("$SCRIPT_DIR/go.mod" "$SCRIPT_DIR/Makefile")
-  for file in $manual_files
+  declare -a manual_files=("$SCRIPT_DIR/go.mod" "$SCRIPT_DIR/Makefile")
+  for file in "${manual_files[@]}"
   do
+    echo "$file"
     replace_values "$file"
   done 
 
-  patterns=("*.yml" "*.md")
-  for pattern in $patterns
+  declare -a patterns=("*.yml" "*.md")
+  for pattern in "${patterns[@]}"
   do
-    replace_values_recursively "$SCRIPT_DIR" $pattern
+    replace_values_recursively "$SCRIPT_DIR" "$pattern"
   done 
 }
 
