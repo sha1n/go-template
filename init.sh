@@ -8,7 +8,7 @@ RESET='\033[0m'
 
 OWNER="$1"
 REPO="$2"
-GOVERSION="1.17"
+GOVERSION="1.18"
 
 
 if [[ "$1" == "" || "$2" == "" ]];
@@ -32,7 +32,7 @@ replace_values() {
   title "Processing $1..."
   sed -i "" "s/sha1n/$OWNER/g" "$1"
   sed -i "" "s/go-template/$REPO/g" "$1"
-  sed -i "" "s/1.17/$GOVERSION/g" "$1"
+  sed -i "" "s/1.18/$GOVERSION/g" "$1"
 }
 
 replace_values_recursively() {
