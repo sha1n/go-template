@@ -12,7 +12,7 @@ SCRIPTS_HOME := "$(BASEDIR)/scripts"
 # Protobuf setup related
 PROTOC_HOME := "$(BASEDIR)/protoc"
 PROTOC_SOURCES := "$(BASEDIR)/proto"
-PROTOC_VERSION := "3.17.3"
+PROTOC_VERSION := "3.20.0"
 
 BIN := "$(BASEDIR)/bin"
 BUILD := "$(BASEDIR)/build"
