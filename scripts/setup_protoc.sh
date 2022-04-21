@@ -76,7 +76,7 @@ then
 fi 
 
 if download_protoc ; then
-  ok "protoc succesdsfully installed to ${TARGET_DIR}"
+  ok "protoc successfully installed to ${TARGET_DIR}"
 else
   error "installation failed"
   exit 1
