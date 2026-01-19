@@ -12,7 +12,9 @@
 ```bash
 git clone git@github.com:<owner>/<repo>.git
 cd <repo>
-./init.sh <owner> <repo>
+make init
+# OR
+go run cmd/init/main.go
 ```
 
 ## Features
