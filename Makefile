@@ -51,6 +51,9 @@ MAKEFLAGS += --silent
 
 default: install format lint build test
 
+init:
+	go run cmd/init/main.go
+
 ci-checks: install format lint test
 
 install: go-get go-install
