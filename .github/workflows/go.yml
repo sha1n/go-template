@@ -27,6 +27,10 @@ jobs:
         run: |
           go test -v -covermode=count -coverprofile=coverage.out ./...
 
+      - name: Test Init Script
+        run: |
+           go run cmd/init/main.go --help
+
       - name: Coverage
         uses: jandelgado/gcov2lcov-action@v1.2.0
       - name: Coveralls
