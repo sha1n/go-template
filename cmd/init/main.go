@@ -12,42 +12,50 @@ import (
 	"strings"
 )
 
-var (
-	owner     string
-	repo      string
-	goVersion string
-	dryRun    bool
-)
+type Config struct {
+	Owner     string
+	Repo      string
+	GoVersion string
+	DryRun    bool
+}
 
 func main() {
-	flag.StringVar(&owner, "owner", "", "The GitHub owner (username or org)")
-	flag.StringVar(&repo, "repo", "", "The repository name")
-	flag.StringVar(&goVersion, "go-version", "", "The Go version (e.g. 1.21)")
-	flag.BoolVar(&dryRun, "dry-run", false, "Dry run mode (do not change files)")
+	var config Config
+	flag.StringVar(&config.Owner, "owner", "", "The GitHub owner (username or org)")
+	flag.StringVar(&config.Repo, "repo", "", "The repository name")
+	flag.StringVar(&config.GoVersion, "go-version", "", "The Go version (e.g. 1.21)")
+	flag.BoolVar(&config.DryRun, "dry-run", false, "Dry run mode (do not change files)")
 	flag.Parse()
 
+	if err := Run(config); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func Run(config Config) error {
 	// 1. Detect defaults
 	detectedOwner, detectedRepo, err := detectGitRemote()
 	if err == nil {
-		if owner == "" {
-			owner = detectedOwner
+		if config.Owner == "" {
+			config.Owner = detectedOwner
 		}
-		if repo == "" {
-			repo = detectedRepo
+		if config.Repo == "" {
+			config.Repo = detectedRepo
 		}
 	} else {
 		// Fallback detection
-		if repo == "" {
+		if config.Repo == "" {
 			wd, _ := os.Getwd()
-			repo = filepath.Base(wd)
+			config.Repo = filepath.Base(wd)
 		}
-		if owner == "" {
+		if config.Owner == "" {
 			out, _ := exec.Command("git", "config", "user.name").Output()
-			owner = strings.TrimSpace(string(out))
+			config.Owner = strings.TrimSpace(string(out))
 		}
 	}
 
-	if goVersion == "" {
+	if config.GoVersion == "" {
 		// Detect go version
 		out, err := exec.Command("go", "version").Output()
 		if err == nil {
@@ -55,46 +63,52 @@ func main() {
 			re := regexp.MustCompile(`go(\d+\.\d+)`)
 			match := re.FindStringSubmatch(string(out))
 			if len(match) > 1 {
-				goVersion = match[1]
+				config.GoVersion = match[1]
 			}
 		}
-		if goVersion == "" {
-			goVersion = "1.21"
+		if config.GoVersion == "" {
+			config.GoVersion = "1.21"
 		}
 	}
 
 	// 2. Interactive prompt
-	if !isFlagPassed("owner") || !isFlagPassed("repo") {
+	if (config.Owner == "" || config.Repo == "") && !isFlagPassed("owner") && !isFlagPassed("repo") {
+		// Only prompt if stdin is a terminal? For now just prompt if missing.
+		// Check if we are in a non-interactive environment would be better, but let's stick to simple logic.
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Printf("Owner [%s]: ", owner)
+
+		if config.Owner == "" {
+			fmt.Printf("Owner [%s]: ", config.Owner)
+			input, _ := reader.ReadString('\n')
+			input = strings.TrimSpace(input)
+			if input != "" {
+				config.Owner = input
+			}
+		}
+
+		if config.Repo == "" {
+			fmt.Printf("Repo [%s]: ", config.Repo)
+			input, _ := reader.ReadString('\n')
+			input = strings.TrimSpace(input)
+			if input != "" {
+				config.Repo = input
+			}
+		}
+
+		fmt.Printf("Go Version [%s]: ", config.GoVersion)
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 		if input != "" {
-			owner = input
-		}
-
-		fmt.Printf("Repo [%s]: ", repo)
-		input, _ = reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		if input != "" {
-			repo = input
-		}
-
-		fmt.Printf("Go Version [%s]: ", goVersion)
-		input, _ = reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		if input != "" {
-			goVersion = input
+			config.GoVersion = input
 		}
 	}
 
-	if owner == "" || repo == "" {
-		fmt.Println("Error: Owner and Repo are required.")
-		os.Exit(1)
+	if config.Owner == "" || config.Repo == "" {
+		return fmt.Errorf("owner and Repo are required")
 	}
 
-	fmt.Printf("Initializing with Owner: %s, Repo: %s, Go Version: %s\n", owner, repo, goVersion)
-	if dryRun {
+	fmt.Printf("Initializing with Owner: %s, Repo: %s, Go Version: %s\n", config.Owner, config.Repo, config.GoVersion)
+	if config.DryRun {
 		fmt.Println("DRY RUN MODE: No changes will be applied.")
 	}
 
@@ -117,16 +131,15 @@ func main() {
 			return nil
 		}
 
-		return processFile(path, info)
+		return processFile(path, info, config)
 	})
 
 	if err != nil {
-		fmt.Printf("Error processing files: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error processing files: %v", err)
 	}
 
 	// 4. Git hooks
-	if !dryRun {
+	if !config.DryRun {
 		err := deployGitHooks()
 		if err != nil {
 			fmt.Printf("Warning: Failed to deploy git hooks: %v\n", err)
@@ -136,7 +149,7 @@ func main() {
 	}
 
 	// 5. Run Make
-	if !dryRun {
+	if !config.DryRun {
 		fmt.Println("Running build (make)...")
 		cmd := exec.Command("make")
 		cmd.Stdout = os.Stdout
@@ -150,7 +163,7 @@ func main() {
 	}
 
 	// 6. Cleanup
-	if !dryRun {
+	if !config.DryRun {
 		fmt.Println("Cleaning up initialization scripts...")
 
 		if err := os.Remove("init.sh"); err != nil && !os.IsNotExist(err) {
@@ -165,6 +178,8 @@ func main() {
 			fmt.Println("Cleanup complete.")
 		}
 	}
+
+	return nil
 }
 
 func isFlagPassed(name string) bool {
@@ -205,7 +220,7 @@ func detectGitRemote() (string, string, error) {
 	return "", "", fmt.Errorf("could not parse remote url")
 }
 
-func processFile(path string, info fs.FileInfo) error {
+func processFile(path string, info fs.FileInfo, config Config) error {
 	// Skip binary files or other irrelevant files?
 	ext := filepath.Ext(path)
 	// We want to process .go, .md, .yml, .mod, Makefile
@@ -223,26 +238,26 @@ func processFile(path string, info fs.FileInfo) error {
 	// Replacements
 
 	// 1. github.com/sha1n/go-template -> github.com/owner/repo
-	content = strings.ReplaceAll(content, "github.com/sha1n/go-template", fmt.Sprintf("github.com/%s/%s", owner, repo))
+	content = strings.ReplaceAll(content, "github.com/sha1n/go-template", fmt.Sprintf("github.com/%s/%s", config.Owner, config.Repo))
 
 	// 2. sha1n/go-template -> owner/repo (for badges, etc)
-	content = strings.ReplaceAll(content, "sha1n/go-template", fmt.Sprintf("%s/%s", owner, repo))
+	content = strings.ReplaceAll(content, "sha1n/go-template", fmt.Sprintf("%s/%s", config.Owner, config.Repo))
 
 	// 3. specific replacement for go-template -> repo in Makefile and maybe elsewhere
-	content = strings.ReplaceAll(content, "go-template", repo)
+	content = strings.ReplaceAll(content, "go-template", config.Repo)
 
 	// 4. sha1n -> owner
-	content = strings.ReplaceAll(content, "sha1n", owner)
+	content = strings.ReplaceAll(content, "sha1n", config.Owner)
 
 	// 5. Go Version in go.mod
 	if filepath.Base(path) == "go.mod" {
 		re := regexp.MustCompile(`go \d+\.\d+`)
-		content = re.ReplaceAllString(content, "go "+goVersion)
+		content = re.ReplaceAllString(content, "go "+config.GoVersion)
 	}
 
 	if content != originalContent {
 		fmt.Printf("Updating %s...\n", path)
-		if !dryRun {
+		if !config.DryRun {
 			err = os.WriteFile(path, []byte(content), info.Mode())
 			if err != nil {
 				return err
