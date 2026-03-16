@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-  # pull_request event is required only for autolabeler
-  pull_request:
+  # pull_request_target event is required only for autolabeler
+  pull_request_target:
     # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
 
@@ -17,8 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v7
-        with:
-          commitish: master
         #   config-name: release-drafter.yml
         #   disable-autolabeler: true
         env:
