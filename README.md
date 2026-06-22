@@ -9,6 +9,10 @@
 # go-template
 
 ## Before anything else
+
+Create your repository with GitHub's **["Use this template"](https://github.com/sha1n/go-template/generate)** button — **do not `git clone` this template directly.** "Use this template" starts your new repo with a clean, single-commit history; cloning would drag along this template's entire commit history.
+
+Then clone *your new repository* and initialize it:
 ```bash
 git clone git@github.com:<owner>/<repo>.git
 cd <repo>
