@@ -51,6 +51,12 @@ MAKEFLAGS += --silent
 
 default: install format lint build test
 
+init:
+	@test -n "$(OWNER)"     || { echo "OWNER is required: make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>"; exit 1; }
+	@test -n "$(REPO)"      || { echo "REPO is required: make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>"; exit 1; }
+	@test -n "$(GOVERSION)" || { echo "GOVERSION is required: make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>"; exit 1; }
+	go run ./internal/bootstrap --owner $(OWNER) --repo $(REPO) --go-version $(GOVERSION)
+
 ci-checks: install format lint test
 
 install: go-get go-install

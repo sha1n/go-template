@@ -1,0 +1,20 @@
+# Normalize line endings to LF on checkout across all platforms. Without this,
+# Git for Windows (core.autocrlf=true) checks text files out with CRLF, which
+# breaks tooling that anchors on line ends (e.g. the go.mod version rewrite in
+# internal/bootstrap) and produces noisy cross-platform diffs.
+* text=auto eol=lf
+
+# Keep shell scripts and git hooks LF regardless of detection.
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# Common binary types — never normalize (in case assets are added later).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
