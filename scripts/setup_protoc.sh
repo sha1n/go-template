@@ -17,13 +17,19 @@ download_protoc() {
 
   title "Downloading protoc for $GOOS/$GOARCH..."
 
-  if [[ "$GOOS" == "darwin" && "$GOARCH" == "amd64" ]]; 
+  if [[ "$GOOS" == "darwin" && "$GOARCH" == "amd64" ]];
   then
     osarch="osx-x86_64"
-  elif [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; 
+  elif [[ "$GOOS" == "darwin" && "$GOARCH" == "arm64" ]];
+  then
+    osarch="osx-aarch_64"
+  elif [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]];
   then
     osarch="linux-x86_64"
-  elif [[ "$GOOS" == "windows" && "$GOARCH" == "amd64" ]]; 
+  elif [[ "$GOOS" == "linux" && "$GOARCH" == "arm64" ]];
+  then
+    osarch="linux-aarch_64"
+  elif [[ "$GOOS" == "windows" && "$GOARCH" == "amd64" ]];
   then
     osarch="win64"
   else

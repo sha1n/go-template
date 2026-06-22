@@ -8,7 +8,13 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux + Windows only. macOS is intentionally excluded (cost) and is
+        # verified manually on dev machines. Do NOT add macOS.
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
@@ -17,19 +23,30 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install
-        run: make install
-
-      - name: Build
-        run: make build
-
+      # Cross-platform Go checks on every OS. Includes the bootstrap
+      # scaffolding-on-a-copy integration test. Pinned to bash (available on the
+      # Windows runner) so the command parses identically on every leg — under
+      # the Windows default shell (pwsh) `go test ... ./...` mis-parses the
+      # coverage argument into a phantom `.out` package.
       - name: Test
-        run: |
-          go test -v -covermode=count -coverprofile=coverage.out ./...
+        shell: bash
+        run: go test -covermode=count -coverprofile=coverage.out ./...
 
+      # The Unix-oriented make pipeline runs on Linux only (windows-latest
+      # cannot run the bash/cp-based Makefile).
+      - name: Build (make)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make install
+          make build
+
+      # Coverage uploaded from a single leg to avoid double-submission.
       - name: Coverage
+        if: matrix.os == 'ubuntu-latest'
         uses: jandelgado/gcov2lcov-action@v1.2.0
+
       - name: Coveralls
+        if: matrix.os == 'ubuntu-latest'
         uses: coverallsapp/github-action@v2.3.7
         with:
           github-token: ${{ secrets.github_token }}
