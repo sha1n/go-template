@@ -12,12 +12,17 @@
 ```bash
 git clone git@github.com:<owner>/<repo>.git
 cd <repo>
-./init.sh <owner> <repo>
+
+# With Claude Code (recommended): guided, tailored, self-cleaning
+/init-template
+
+# Or plain, deterministic rename (Go toolchain only):
+make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>
 ```
 
 ## Features
 
-- Init script for initial repo setup
+- Guided/deterministic project initialization (`/init-template` or `make init`)
 - Makefile
   - standard build/test/format/lint
   - protobuf support with repo private `protoc` installtion (see `PROTOC_VERSION` in [Makefile](Makefile))
