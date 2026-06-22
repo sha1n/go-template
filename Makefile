@@ -102,7 +102,7 @@ go-build-current:
 	@echo "  >  Building $(GOHOSTOS)/$(GOHOSTARCH) binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOHOSTOS) GOARCH=$(GOHOSTARCH) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME) $(BASEDIR)/cmd
 
-go-build: go-get generate-sources go-build-linux-amd64 go-build-linux-arm go-build-linux-arm64 go-build-darwin-amd64 go-build-darwin-arm64 go-build-windows-amd64 go-build-windows-arm
+go-build: go-get generate-sources go-build-linux-amd64 go-build-linux-arm go-build-linux-arm64 go-build-darwin-amd64 go-build-darwin-arm64 go-build-windows-amd64 go-build-windows-arm64
 
 go-test:
 	go test $(MODFLAGS) -covermode=count `go list $(MODFLAGS) ./...`
@@ -131,9 +131,9 @@ go-build-windows-amd64:
 	@echo "  >  Building windows amd64 binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_AMD64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_AMD64).exe $(BASEDIR)/cmd
 
-go-build-windows-arm:
-	@echo "  >  Building windows arm binaries..."
-	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_ARM) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_ARM).exe $(BASEDIR)/cmd
+go-build-windows-arm64:
+	@echo "  >  Building windows arm64 binaries..."
+	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_ARM64).exe $(BASEDIR)/cmd
 
 go-proto-gen:
 	@echo "  >  Generating protobuf sources..."
