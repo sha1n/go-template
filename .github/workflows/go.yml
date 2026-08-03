@@ -47,7 +47,7 @@ jobs:
 
       - name: Coveralls
         if: matrix.os == 'ubuntu-latest'
-        uses: coverallsapp/github-action@v2.3.7
+        uses: coverallsapp/github-action@v2.3.8
         with:
           github-token: ${{ secrets.github_token }}
           path-to-lcov: coverage.lcov
