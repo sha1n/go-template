@@ -29,22 +29,23 @@ jobs:
 
       # Cross-platform Go checks on every OS. Includes the bootstrap
       # scaffolding-on-a-copy integration test. Pinned to bash (available on the
-      # Windows runner) so the command parses identically on every leg — under
-      # the Windows default shell (pwsh) `go test ... ./...` mis-parses the
-      # coverage argument into a phantom `.out` package.
+      # Windows runner) so the command parses identically on every leg. No coverage
+      # flags here; Linux generates coverage via `make coverage` below.
       - name: Test
         shell: bash
-        run: go test -covermode=count -coverprofile=coverage.out ./...
+        run: go test ./...
 
       # The Unix-oriented make pipeline runs on Linux only (windows-latest
       # cannot run the bash/cp-based Makefile). `make lint` runs golangci-lint
       # (pinned via the `tool` directives in go.mod), which gates merges on the
-      # complexity thresholds in .golangci.yml.
+      # complexity thresholds in .golangci.yml. `make coverage` generates the
+      # coverage.out file for Codecov upload.
       - name: Lint and build (make)
         if: matrix.os == 'ubuntu-latest'
         run: |
           make install
           make lint
+          make coverage
           make build
 
       # Coverage uploaded from a single leg to avoid double-submission.
