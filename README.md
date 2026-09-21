@@ -39,4 +39,3 @@ make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>
   - Release Drafter - [release-drafter.yml](/.github/workflows/release-drafter.yml)
   - Dependabot App - [dependabot.yml](/.github/dependabot.yml)
 - Jekyll site setup with the [Cayman](https://github.com/pages-themes/cayman) theme (and some color overrides)
-- .travis.yml for Go
