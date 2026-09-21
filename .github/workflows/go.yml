@@ -8,6 +8,10 @@ on:
 
 jobs:
   ci:
+    permissions:
+      contents: read
+      # Required by the tokenless (OIDC) Codecov upload.
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -44,13 +48,28 @@ jobs:
           make build
 
       # Coverage uploaded from a single leg to avoid double-submission.
-      - name: Coverage
+      # Tokenless OIDC upload; fail_ci_if_error stays off so a repo that has
+      # not activated Codecov yet still gets green CI.
+      - name: Coverage (Codecov)
         if: matrix.os == 'ubuntu-latest'
-        uses: jandelgado/gcov2lcov-action@v1.2.0
-
-      - name: Coveralls
-        if: matrix.os == 'ubuntu-latest'
-        uses: coverallsapp/github-action@v2.3.8
+        uses: codecov/codecov-action@v7
         with:
-          github-token: ${{ secrets.github_token }}
-          path-to-lcov: coverage.lcov
+          files: ./coverage.out
+          use_oidc: true
+          fail_ci_if_error: false
+
+  # Standalone so a complexity-threshold breach shows as its own red check,
+  # in parallel with the lint/test matrix. Thresholds live in .golangci.yml
+  # and are also enforced by `make lint`.
+  complexity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Complexity gate
+        run: make complexity

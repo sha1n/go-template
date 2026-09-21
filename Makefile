@@ -98,6 +98,14 @@ go-lint:
 	@echo "  >  Linting source files..."
 	go tool $(MODFLAGS) github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 
+# Function-level complexity gate only (thresholds live in .golangci.yml).
+# `make lint` also enforces these; this target exists so CI can surface a
+# threshold breach as its own red check.
+.PHONY: complexity
+complexity:
+	@echo "  >  Running complexity analysis..."
+	go tool $(MODFLAGS) github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --default=none --enable=gocognit,gocyclo ./...
+
 go-format:
 	@echo "  >  Formating source files..."
 	gofmt -s -w $(GOFILES)
