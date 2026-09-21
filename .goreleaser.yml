@@ -2,7 +2,7 @@ version: 2
 
 before:
   hooks:
-    - go mod tidy
+    - go mod tidy -diff
 
 builds:
   - env:
@@ -25,7 +25,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - build/completions
       - src: 'build/completions/*'
         dst: completions
         strip_parent: true
@@ -49,6 +48,7 @@ homebrew_casks:
     repository:
       owner: sha1n
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
     homepage: "https://sha1n.github.io/{{ .ProjectName }}/"
 

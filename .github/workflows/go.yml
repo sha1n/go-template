@@ -40,7 +40,7 @@ jobs:
       # (pinned via the `tool` directives in go.mod), which gates merges on the
       # complexity thresholds in .golangci.yml. `make coverage` generates the
       # coverage.out file for Codecov upload.
-      - name: Lint and build (make)
+      - name: Lint, coverage, and build (make)
         if: matrix.os == 'ubuntu-latest'
         run: |
           make install

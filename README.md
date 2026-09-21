@@ -31,7 +31,7 @@ make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>
   - standard build/test/format/lint
   - protobuf support with repo private `protoc` installation (see `PROTOC_VERSION` in [Makefile](Makefile))
   - multi-platform binaries
-  - goreleaser with Homebrew cask support
+  - goreleaser with Homebrew cask support (publishing the cask needs a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret with write access to the tap)
 - Workflows
   - Go build + coverage - [go.yml](/.github/workflows/go.yml)
   - Release Drafter - [release-drafter.yml](/.github/workflows/release-drafter.yml)
