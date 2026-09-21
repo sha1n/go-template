@@ -29,9 +29,9 @@ make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>
 - Guided/deterministic project initialization (`/init-template` or `make init`)
 - Makefile
   - standard build/test/format/lint
-  - protobuf support with repo private `protoc` installtion (see `PROTOC_VERSION` in [Makefile](Makefile))
+  - protobuf support with repo private `protoc` installation (see `PROTOC_VERSION` in [Makefile](Makefile))
   - multi-platform binaries
-  - goreleaser with `brew` support
+  - goreleaser with Homebrew cask support
 - Workflows
   - Go build + coverage - [go.yml](/.github/workflows/go.yml)
   - Release Drafter - [release-drafter.yml](/.github/workflows/release-drafter.yml)
