@@ -1,6 +1,9 @@
+version: 2
+
 before:
   hooks:
-    - go mod download
+    - go mod tidy -diff
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -13,16 +16,15 @@ builds:
       - arm
       - arm64
     ldflags:
-      - -s -w -X main.DisableSelfUpdate=true -X main.Version={{.Version}} -X main.Build={{.Commit}} -X main.ProgramName={{.ProjectName}}
-    main: ./cmd/main.go
+      - -s -w -X main.Version={{.Version}} -X main.Build={{.ShortCommit}} -X main.ProgramName={{.ProjectName}}
+    main: ./cmd
+
 archives:
   -
-    rlcp: true
     id: main
     files:
       - README.md
       - LICENSE
-      - build/completions
       - src: 'build/completions/*'
         dst: completions
         strip_parent: true
@@ -31,38 +33,35 @@ checksum:
   name_template: "checksums.txt"
   algorithm: sha256
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
-brews:
+homebrew_casks:
   - name: "{{ .ProjectName }}"
-    goarm: 6
+    binaries:
+      - "{{ .ProjectName }}"
 
-    tap:
+    repository:
       owner: sha1n
       name: homebrew-tap
-
-    url_template: "https://github.com/sha1n/{{ .ProjectName }}/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    download_strategy: CurlDownloadStrategy
-    commit_author:
-      name: goreleaserbot
-      email: goreleaser@carlosbecker.com
-
-    folder: Formula
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
     homepage: "https://sha1n.github.io/{{ .ProjectName }}/"
-    description: ""
-    license: "MIT"
 
-    test: |
-      system "#{bin}/{{ .ProjectName }} --version"
-
-    install: |
-      bin.install "{{ .ProjectName }}"
-      bash_completion.install "completions/{{ .ProjectName }}.bash" => "{{ .ProjectName }}"
-      fish_completion.install "completions/{{ .ProjectName }}.fish" => "{{ .ProjectName }}"
-      zsh_completion.install "completions/_{{ .ProjectName }}" => "_{{ .ProjectName }}"
+    # Released binaries are neither signed nor notarized, so Gatekeeper would
+    # otherwise refuse to run them. GoReleaser cannot yet emit the
+    # `postflight_steps` stanza that Homebrew requires in place of the
+    # deprecated `postflight`, so declare it through `custom_block`. The
+    # Homebrew `{{staged_path}}` token is escaped from GoReleaser templating.
+    # With `hooks.post.install_steps` (goreleaser/goreleaser#6873), use
+    # `{{ .StagedPath }}`: hooks are templated twice and lose the escape.
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/{{ .ProjectName }}"]
+        end
+      end
