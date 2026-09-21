@@ -9,7 +9,9 @@ Guidance for coding agents working in this repository (a Go project template).
   **Do not add macOS to the CI matrix** in `.github/workflows/go.yml`.
 - The cross-platform Go checks (`go test ./...`, which includes the
   `internal/bootstrap` integration test) run on every OS in the matrix. The
-  Unix-oriented `make` pipeline and the Coveralls upload run on the Linux leg only.
+  Unix-oriented `make` pipeline and the Codecov upload (tokenless, via OIDC) run
+  on the Linux leg only. A standalone `complexity` job runs `make complexity` in
+  parallel with the matrix.
 
 ## Build / test / lint
 
