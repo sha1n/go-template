@@ -20,6 +20,9 @@ build/
 protoc/
 generated/
 
+# Locally installed build tools (see `tool` directives in go.mod)
+.bin/
+
 # IDE
 .vscode/
 

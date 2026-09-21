@@ -33,11 +33,14 @@ jobs:
         run: go test -covermode=count -coverprofile=coverage.out ./...
 
       # The Unix-oriented make pipeline runs on Linux only (windows-latest
-      # cannot run the bash/cp-based Makefile).
-      - name: Build (make)
+      # cannot run the bash/cp-based Makefile). `make lint` runs golangci-lint
+      # (pinned via the `tool` directives in go.mod), which gates merges on the
+      # complexity thresholds in .golangci.yml.
+      - name: Lint and build (make)
         if: matrix.os == 'ubuntu-latest'
         run: |
           make install
+          make lint
           make build
 
       # Coverage uploaded from a single leg to avoid double-submission.
