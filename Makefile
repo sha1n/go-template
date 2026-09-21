@@ -12,11 +12,14 @@ SCRIPTS_HOME := "$(BASEDIR)/scripts"
 # Protobuf setup related
 PROTOC_HOME := "$(BASEDIR)/protoc"
 PROTOC_SOURCES := "$(BASEDIR)/proto"
-PROTOC_VERSION := "35.1"
+PROTOC_VERSION := "36.2"
 
 BIN := "$(BASEDIR)/bin"
 BUILD := "$(BASEDIR)/build"
 GENERATED := "$(BASEDIR)/generated"
+# Build tools are pinned via `tool` directives in go.mod and installed here,
+# never into the global GOBIN.
+TOOLS_BIN := "$(BASEDIR)/.bin"
 
 # Go related
 ifndef $(GOPATH)
@@ -88,11 +91,12 @@ clean:
 	@-rm -rf $(GENERATED)/* 2> /dev/null
 	@-rm -rf $(BIN)/* 2> /dev/null
 	@-rm -rf $(BUILD)/* 2> /dev/null
+	@-rm -rf $(TOOLS_BIN)/* 2> /dev/null
 	@-$(MAKE) go-clean
 
 go-lint:
 	@echo "  >  Linting source files..."
-	go vet $(MODFLAGS) -c=10 `go list $(MODFLAGS) ./...`
+	go tool $(MODFLAGS) github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./...
 
 go-format:
 	@echo "  >  Formating source files..."
@@ -135,22 +139,19 @@ go-build-windows-arm64:
 	@echo "  >  Building windows arm64 binaries..."
 	@GOPATH=$(GOPATH) GOOS=$(GOOS_WINDOWS) GOARCH=$(GOARCH_ARM64) GOBIN=$(GOBIN) go build $(MODFLAGS) $(LDFLAGS) -o $(BIN)/$(PROGRAMNAME)-$(GOOS_WINDOWS)-$(GOARCH_ARM64).exe $(BASEDIR)/cmd
 
-go-proto-gen:
+go-proto-gen: go-install
 	@echo "  >  Generating protobuf sources..."
 	@[ -d $(PROTOC_HOME) ] || "$(SCRIPTS_HOME)/setup_protoc.sh" "$(PROTOC_VERSION)" "$(PROTOC_HOME)"
 	@[ -d $(GENERATED) ] || mkdir -p $(GENERATED)
-	PATH=$$PATH:$(GOBIN) $(PROTOC_HOME)/bin/protoc --go_out=$(GENERATED) -I=$(PROTOC_HOME)/include -I=$(PROTOC_SOURCES) $(PROTOC_SOURCES)/*.proto
+	PATH=$(TOOLS_BIN):$$PATH $(PROTOC_HOME)/bin/protoc --go_out=$(GENERATED) -I=$(PROTOC_HOME)/include -I=$(PROTOC_SOURCES) $(PROTOC_SOURCES)/*.proto
 
 go-get:
-	@echo "  >  Downloading build dependencies..."
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go get google.golang.org/protobuf/cmd/protoc-gen-go
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
-	# @GOPATH=$(GOPATH) GOBIN=$(GOBIN) go mod tidy
+	@echo "  >  Downloading module dependencies..."
+	@go mod download
 
 go-install:
-	@echo "  >  Installing build dependencies..."
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	@echo "  >  Installing build tools into $(TOOLS_BIN)..."
+	@GOBIN=$(TOOLS_BIN) go install tool
 
 go-clean:
 	@echo "  >  Cleaning build cache"

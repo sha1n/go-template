@@ -1,0 +1,29 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - gocognit
+    - gocyclo
+  settings:
+    # min-complexity is the highest value that still passes, not the value at
+    # which reporting starts.
+    gocognit:
+      min-complexity: 20
+    gocyclo:
+      min-complexity: 12
+  exclusions:
+    rules:
+      # Table-driven and integration tests are legitimately branchy, and
+      # decomposing them tends to hide the assertions.
+      - path: _test\.go
+        linters:
+          - gocognit
+          - gocyclo
+
+issues:
+  # Report every metric a function violates in one run. With the default, an
+  # issue on a line already reported by another linter is dropped, so a
+  # gocyclo violation stays hidden until the gocognit one on the same
+  # declaration is fixed.
+  uniq-by-line: false
