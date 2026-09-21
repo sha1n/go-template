@@ -1,4 +1,5 @@
 [![Go](https://github.com/sha1n/go-template/actions/workflows/go.yml/badge.svg)](https://github.com/sha1n/go-template/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/sha1n/go-template/graph/badge.svg)](https://codecov.io/gh/sha1n/go-template)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sha1n/go-template)
 [![Go Report Card](https://goreportcard.com/badge/sha1n/go-template)](https://goreportcard.com/report/sha1n/go-template) 
 [![Release](https://img.shields.io/github/release/sha1n/go-template.svg?style=flat-square)](https://github.com/sha1n/go-template/releases)
@@ -38,4 +39,3 @@ make init OWNER=<owner> REPO=<repo> GOVERSION=<x.y>
   - Release Drafter - [release-drafter.yml](/.github/workflows/release-drafter.yml)
   - Dependabot App - [dependabot.yml](/.github/dependabot.yml)
 - Jekyll site setup with the [Cayman](https://github.com/pages-themes/cayman) theme (and some color overrides)
-- .travis.yml for Go
