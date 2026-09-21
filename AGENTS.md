@@ -16,7 +16,7 @@ Guidance for coding agents working in this repository (a Go project template).
 ## Build / test / lint
 
 - `make` — default: install, format, lint, build, test.
-- `make ci-checks` — install, format, lint, test.
+- `make ci-checks` — install, lint (includes the gofmt check), test.
 - `make lint` — golangci-lint with the complexity gates in `.golangci.yml`.
   Build tools are pinned via `tool` directives in `go.mod` and run hermetically
   (`go tool` / local `.bin/`), never from the global `GOBIN`.
